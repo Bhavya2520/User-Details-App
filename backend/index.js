@@ -1,3 +1,5 @@
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
@@ -9,10 +11,10 @@ app.use(bodyParser.json());
 
 const pool = new Pool({
   host: process.env.PGHOST || 'db',
-  user: process.env.PGUSER || 'postgres',
-  password: process.env.PGPASSWORD || 'example',
-  database: process.env.PGDATABASE || 'usersdb',
-  port: process.env.PGPORT ? Number(process.env.PGPORT) : 5432,
+  user: process.env.PGUSER,
+  password: process.env.PGPASSWORD,
+  database: process.env.PGDATABASE,
+  port: Number(process.env.PGPORT || 5432),
 });
 
 async function initDb() {
