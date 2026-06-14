@@ -3,13 +3,8 @@ services:
     build: ./backend
     ports:
       - "4000:4000"
-    environment:
-      - NODE_ENV=production
-      - PGHOST=db
-      - PGUSER=postgres
-      - PGPASSWORD=example
-      - PGDATABASE=usersdb
-      - PGPORT=5432
+    env_file:
+      - .env
     depends_on:
       - db
     restart: unless-stopped
@@ -24,10 +19,8 @@ services:
 
   db:
     image: postgres:15
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=example
-      - POSTGRES_DB=usersdb
+    env_file:
+      - .env
     volumes:
       - db_data:/var/lib/postgresql/data
     restart: unless-stopped
