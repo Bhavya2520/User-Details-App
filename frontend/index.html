@@ -1,0 +1,133 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>User Details</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+      :root{--bg:#f6f9fc;--card:#ffffff;--accent:#4f46e5;--muted:#6b7280}
+      *{box-sizing:border-box}
+      body{font-family:Inter,system-ui,Arial;background:linear-gradient(180deg,#eef2ff 0%,#f8fafc 100%);margin:0;padding:2rem;display:flex;align-items:center;justify-content:center;min-height:100vh}
+      .container{width:100%;max-width:980px}
+      .card{background:var(--card);padding:1.25rem;border-radius:12px;box-shadow:0 6px 20px rgba(15,23,42,0.06);}
+      h1{margin:0 0 0.5rem 0;font-size:1.25rem}
+      p.lead{margin:0;color:var(--muted);font-size:0.95rem}
+      .grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1rem}
+      label{display:block;font-size:0.9rem;color:#111827;margin-bottom:0.35rem}
+      input{width:100%;padding:0.6rem;border:1px solid #e6e9ef;border-radius:8px;font-size:0.95rem}
+      button{background:var(--accent);color:white;padding:0.6rem 1rem;border:0;border-radius:8px;cursor:pointer;font-weight:600}
+      .users{margin-top:1rem}
+      table{width:100%;border-collapse:collapse}
+      th,td{padding:0.6rem 0.5rem;text-align:left;border-bottom:1px solid #f1f5f9}
+      thead th{color:var(--muted);font-size:0.85rem}
+      .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem}
+      .feedback{margin-left:0.5rem;color:green}
+      @media (max-width:700px){.grid{grid-template-columns:1fr}}
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="card">
+        <div class="topbar">
+          <div>
+            <h1>Submit User Details</h1>
+            <p class="lead">Enter basic user information and store it in the backend.</p>
+          </div>
+          <div class="status" id="status"></div>
+        </div>
+
+        <form id="userForm">
+          <div class="grid">
+            <div>
+              <label for="name">Name</label>
+              <input id="name" name="name" required />
+            </div>
+            <div>
+              <label for="email">Email</label>
+              <input id="email" name="email" type="email" required />
+            </div>
+            <div>
+              <label for="contact">Contact</label>
+              <input id="contact" name="contact" required />
+            </div>
+            <div>
+              <label for="age">Age</label>
+              <input id="age" name="age" type="number" required />
+            </div>
+          </div>
+          <div style="margin-top:0.85rem;display:flex;gap:0.5rem;align-items:center">
+            <button type="submit">Save User</button>
+            <div id="msg" style="color:var(--muted)"></div>
+          </div>
+        </form>
+
+        <div class="users">
+          <h2 style="margin:0 0 0.5rem 0;font-size:1rem">Users</h2>
+          <div class="card" style="padding:0;border-radius:8px;overflow:auto">
+            <table id="usersTable">
+              <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Contact</th><th>Age</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const API = 'http://localhost:4000/api/users';
+      const msg = document.getElementById('msg');
+      const status = document.getElementById('status');
+
+      async function loadUsers(){
+        try{
+          const res = await fetch(API);
+          if(!res.ok) throw new Error('Failed');
+          const users = await res.json();
+          const tbody = document.querySelector('#usersTable tbody');
+          tbody.innerHTML = '';
+          users.forEach(u=>{
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${u.id}</td><td>${escapeHtml(u.name)}</td><td>${escapeHtml(u.email)}</td><td>${escapeHtml(u.contact)}</td><td>${u.age}</td>`;
+            tbody.appendChild(tr);
+          });
+        }catch(e){
+          status.textContent = 'Backend unreachable';
+          status.style.color = 'red';
+        }
+      }
+
+      function escapeHtml(s){return String(s).replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;" }[c]))}
+
+      document.getElementById('userForm').addEventListener('submit', async (e)=>{
+        e.preventDefault();
+        msg.textContent = 'Saving...';
+        const f = e.target;
+        const data = {
+          name: f.name.value,
+          email: f.email.value,
+          contact: f.contact.value,
+          age: Number(f.age.value)
+        };
+        try{
+          const res = await fetch(API, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
+          if (res.ok) {
+            f.reset();
+            msg.textContent = 'Saved ✓';
+            msg.style.color = 'green';
+            setTimeout(()=>msg.textContent='',1500);
+            loadUsers();
+          } else {
+            msg.textContent = 'Failed to save';
+            msg.style.color = 'red';
+          }
+        }catch(err){
+          msg.textContent = 'Network error';
+          msg.style.color = 'red';
+        }
+      });
+
+      loadUsers();
+    </script>
+  </body>
+</html>
